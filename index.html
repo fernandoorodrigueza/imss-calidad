@@ -81,12 +81,18 @@ function num(v){if(v===null||v===undefined||v==="")return null;const n=Number(St
 function parseWorkbook(workbook){
  const sheet=workbook.Sheets[workbook.SheetNames[0]];
  const rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:null,raw:true});
- let level="", out=[];
+ let level="", category="", out=[];
  for(const row of rows){
    const cells=row||[];
    const a=normalize(cells[0]);
-   if(["1er nivel","2o nivel","2º nivel","3er nivel"].includes(a)) level=String(cells[0]).trim().replace("º","o");
-   const year=num(cells[1]), category=normalize(cells[2]);
+   if(["1er nivel","2o nivel","2º nivel","3er nivel"].includes(a)){
+     level=String(cells[0]).trim().replace("º","o");
+     category="";
+   }
+   const year=num(cells[1]);
+   const categoryCell=normalize(cells[2]);
+   // La categoría aparece en la fila 2023; la fila 2022 deja esa celda vacía.
+   if(CATEGORIES.includes(categoryCell)) category=categoryCell;
    if(level && [2022,2023].includes(year) && CATEGORIES.includes(category)){
      out.push({level,year,category,bueno:num(cells[3]),malo:num(cells[4]),regular:num(cells[5])});
    }
