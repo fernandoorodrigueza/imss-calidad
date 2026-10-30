@@ -1,38 +1,21 @@
-# IMSS: estado de conservación
+# IMSS | Estado de conservación
 
-Página estática para GitHub Pages. Lee `datos.xlsx` y construye:
-- tarjetas grandes para Equipo, Instalaciones e Inmueble;
-- gráficas circulares tipo dona para bueno/malo/regular;
-- barras apiladas para comparar 2022 y 2023;
-- selector de nivel de atención;
-- carga de Excel para vista previa local y detección básica de inconsistencias.
+## Archivos
+- `index.html`: sitio web y visualizaciones.
+- `datos.xlsx`: libro con una hoja por comparativo.
 
-## Publicar en GitHub Pages
+## Publicación
+Sube ambos archivos a la raíz del repositorio de GitHub. En Settings → Pages configura Deploy from a branch, `main` y `/(root)`.
 
-1. Crea un repositorio en GitHub, por ejemplo `imss-calidad`.
-2. Sube `index.html` y `datos.xlsx` a la raíz del repositorio.
-3. En **Settings → Pages**, selecciona **Deploy from a branch**, rama `main` y carpeta `/(root)`. Guarda.
-4. Espera a que GitHub publique el sitio y abre la URL que te indique.
+## Actualización
+Para actualizar los datos, reemplaza `datos.xlsx` en GitHub por el nuevo libro, conservando los nombres de las hojas y la estructura de las tablas. No hay carga de Excel desde la página.
 
-## Actualizar los datos
+## Estructura de cada hoja
+- Columna A: nivel de atención (se puede dejar vacía en filas consecutivas del mismo nivel).
+- Columna B: año.
+- Columna C: categoría (equipo, instalaciones o inmueble; se puede dejar vacía en la fila consecutiva del mismo rubro).
+- Columnas D, E y F: porcentajes bueno, malo y regular.
 
-La página busca `datos.xlsx` junto a `index.html`. Para actualizar el sitio público:
-1. Actualiza el Excel manteniendo la estructura de columnas y filas.
-2. En el repositorio de GitHub, abre `datos.xlsx` y reemplázalo por la versión nueva (Add file → Upload files también sirve).
-3. Confirma el cambio. GitHub Pages servirá los nuevos datos al volver a cargar la página.
+Cada hoja representa un comparativo y debe contener los datos de los dos años para los tres niveles y las tres categorías. La página detecta los años a partir de los datos y genera los botones con los nombres de las hojas.
 
-El botón **Cargar Excel** sirve para probar un archivo en tu navegador; no sube el archivo a GitHub ni modifica el sitio público. Para publicar una actualización hay que reemplazar `datos.xlsx` en el repositorio, o automatizar esa subida con un flujo autenticado.
-
-## Estructura esperada del Excel
-
-Se espera la estructura del archivo original:
-- columna A: nombre del nivel (por ejemplo, `1er nivel`, `2o nivel`, `3er nivel`);
-- columna C: año (2022 o 2023);
-- columna D: categoría (`equipo`, `instalaciones`, `inmueble`);
-- columnas E, F y G: porcentajes `bueno`, `malo`, `regular`.
-
-No cambies la posición de estas columnas sin adaptar el código. El archivo de ejemplo tiene 6 columnas visibles en Excel, pero el parser espera las categorías y porcentajes en sus columnas originales: revisa que el encabezado y los valores no se hayan movido al editar.
-
-## Nota de validación
-
-El archivo original contiene al menos un valor que parece inconsistente: para `2o nivel`, `instalaciones`, año 2023, `regular` figura como `103`, lo que produce un porcentaje fuera de rango y una suma que no cuadra. La página lo señala automáticamente; **no lo corrige por su cuenta**. Verifica el informe fuente antes de publicar ese dato.
+Las gráficas circulares muestran el año más reciente de la hoja seleccionada; las barras apiladas muestran ambos años. La leyenda metodológica solicitada aparece debajo de las gráficas.

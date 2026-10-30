@@ -3,63 +3,65 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>IMSS: estado de conservación</title>
-<meta name="description" content="Visualización del estado de conservación de inmuebles, instalaciones y equipos del IMSS.">
+<title>IMSS | Estado de conservación</title>
+<meta name="description" content="Estado de conservación de equipos, instalaciones e inmuebles del IMSS por nivel de atención.">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
-:root{--ink:#172a35;--muted:#64737b;--line:#dbe2e5;--paper:#f5f7f6;--card:#fff;--good:#21866b;--bad:#c94d4d;--regular:#e2a52b;--accent:#145d70}
+:root{--ink:#172a35;--muted:#64737b;--line:#dbe2e5;--paper:#f4f7f6;--card:#fff;--good:#21866b;--bad:#c94d4d;--regular:#e2a52b;--accent:#145d70}
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
-header{background:#123b49;color:white;padding:clamp(28px,6vw,70px) max(22px,calc((100vw - 1180px)/2))}
-.kicker{font-size:.76rem;text-transform:uppercase;letter-spacing:.14em;color:#b9d8d9;font-weight:700}
-h1{font-size:clamp(2rem,5vw,4rem);line-height:1.04;max-width:900px;margin:16px 0}
-header p{max-width:760px;color:#d8e6e8;font-size:1.05rem;margin:0}
-main{max-width:1180px;margin:0 auto;padding:32px 22px 60px}
-.toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
-.toolbar p{margin:0;color:var(--muted);font-size:.92rem}
-.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-select,.upload-label{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:white;color:var(--ink);font:inherit}
-.upload-label{cursor:pointer;font-weight:650}.upload-label input{display:none}
-.section-title{font-size:1.35rem;margin:28px 0 6px}.section-desc{color:var(--muted);margin:0 0 18px}
+header{background:#123b49;color:white;padding:clamp(34px,6vw,72px) max(22px,calc((100vw - 1180px)/2))}
+.kicker{font-size:.76rem;text-transform:uppercase;letter-spacing:.14em;color:#b9d8d9;font-weight:750}
+h1{font-size:clamp(2rem,5vw,3.8rem);line-height:1.06;max-width:900px;margin:15px 0}
+header p{max-width:760px;color:#d8e6e8;font-size:1.04rem;margin:0}
+main{max-width:1180px;margin:0 auto;padding:30px 22px 58px}
+.selector-block{text-align:center;margin:0 auto 26px}
+.selector-label{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;font-weight:750;color:var(--muted);margin:0 0 11px}
+.button-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.choice{appearance:none;border:1px solid #cbd6d9;background:#fff;color:var(--ink);border-radius:9px;padding:11px 22px;font:inherit;font-weight:700;cursor:pointer;transition:.15s}
+.choice:hover{border-color:var(--accent);transform:translateY(-1px)}
+.choice.active{background:var(--accent);border-color:var(--accent);color:white;box-shadow:0 3px 10px #145d7028}
+.comparison-row .choice{min-width:145px}
+.section-title{font-size:1.35rem;margin:30px 0 5px;text-align:center}
+.section-desc{color:var(--muted);margin:0 0 20px;text-align:center;font-size:.94rem}
 .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;min-width:0;box-shadow:0 4px 16px #17313b08}
-.card-top{display:flex;align-items:center;gap:14px;margin-bottom:12px}
-.big-icon{width:68px;height:68px;border-radius:16px;background:#e8f1f0;display:grid;place-items:center;font-size:2.25rem;flex-shrink:0}
-.card h3{margin:0;font-size:1.25rem}.eyebrow{font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-.chart-wrap{height:220px;position:relative}.legend{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:8px}
+.card-top{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.big-icon{width:66px;height:66px;border-radius:16px;background:#e8f1f0;display:grid;place-items:center;font-size:2.2rem;flex-shrink:0}
+.card h3{margin:0;font-size:1.28rem}
+.chart-wrap{height:218px;position:relative}
+.legend{display:flex;gap:13px;justify-content:center;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:8px}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
 .chart-card{margin-top:18px}.chart-card h3{margin:0 0 4px}.chart-card p{margin:0 0 18px;color:var(--muted);font-size:.92rem}
 .bar-wrap{height:360px;position:relative}
-.note{margin-top:22px;padding:16px 18px;background:#fff8e8;border:1px solid #f0dfb4;border-radius:10px;color:#59471e;font-size:.9rem}
-.source{border-top:1px solid var(--line);margin-top:32px;padding-top:18px;color:var(--muted);font-size:.82rem}
-.status{font-size:.82rem;color:var(--muted);max-width:100%;overflow-wrap:anywhere}
-@media(max-width:800px){.cards{grid-template-columns:1fr}.card{display:block}.chart-wrap{height:240px}.bar-wrap{height:420px}}
+.method-note{margin-top:20px;padding:13px 16px;background:#fff;border:1px solid var(--line);border-radius:10px;color:#52616a;font-size:.88rem}
+.source{border-top:1px solid var(--line);margin-top:28px;padding-top:17px;color:var(--muted);font-size:.82rem}
+.status{margin:10px auto 0;text-align:center;color:#9b3e35;font-size:.88rem}
+@media(max-width:800px){.cards{grid-template-columns:1fr}.chart-wrap{height:240px}.bar-wrap{height:420px}.choice{padding:10px 16px}.comparison-row .choice{min-width:unset}}
 </style>
 </head>
 <body>
 <header>
   <div class="kicker">Radiografía de los servicios de salud</div>
   <h1>¿En qué estado están los equipos, instalaciones e inmuebles del IMSS?</h1>
-  <p>Comparativo del estado de conservación reportado para los tres niveles de atención, con datos de 2022 y 2023.</p>
+  <p>Estado de conservación por nivel de atención y comparativo entre años.</p>
 </header>
 <main>
-  <div class="toolbar">
-    <p id="periodText">Vista inicial: 2023 · Selecciona el nivel de atención.</p>
-    <div class="controls">
-      <label for="levelSelect" class="eyebrow">Nivel de atención</label>
-      <select id="levelSelect" aria-label="Nivel de atención">
-        <option value="1er nivel">1er nivel</option><option value="2o nivel">2o nivel</option><option value="3er nivel">3er nivel</option>
-      </select>
-      <label class="upload-label">Cargar Excel<input id="excelFile" type="file" accept=".xlsx,.xls"></label>
-    </div>
-  </div>
-  <div id="status" class="status" role="status">Leyendo datos del archivo publicado…</div>
-  <h2 class="section-title">Estado de conservación en 2023</h2>
-  <p class="section-desc">Cada círculo representa la proporción reportada como buena, mala o regular. Usa el selector para cambiar el nivel.</p>
+  <section class="selector-block">
+    <p class="selector-label">Nivel de atención</p>
+    <div class="button-row" id="levelButtons" aria-label="Seleccionar nivel de atención"></div>
+  </section>
+  <section class="selector-block">
+    <p class="selector-label">Comparativo</p>
+    <div class="button-row comparison-row" id="comparisonButtons" aria-label="Seleccionar comparativo"></div>
+  </section>
+  <div id="status" class="status" role="status"></div>
+  <h2 class="section-title" id="donutHeading">Estado de conservación · 2024</h2>
+  <p class="section-desc">Distribución porcentual de las condiciones reportadas para cada categoría.</p>
   <section class="cards" id="categoryCards"></section>
   <section class="card chart-card">
-    <h3>Comparativo por categoría y año</h3>
-    <p>Porcentaje reportado como bueno, malo o regular. Las barras apiladas permiten comparar 2022 con 2023.</p>
+    <h3>Comparación por categoría</h3>
+    <p>Distribución porcentual de bueno, malo y regular en los dos años seleccionados.</p>
     <div class="bar-wrap"><canvas id="stackedChart" aria-label="Gráfica de barras apiladas"></canvas></div>
     <div class="legend">
       <span><i class="dot" style="background:var(--good)"></i>Bueno</span>
@@ -67,61 +69,61 @@ select,.upload-label{border:1px solid var(--line);border-radius:8px;padding:10px
       <span><i class="dot" style="background:var(--regular)"></i>Regular</span>
     </div>
   </section>
-  <div class="note" id="dataNote" hidden></div>
-  <div class="source">Fuente: <em>Informe al Ejecutivo Federal y al Congreso de la Unión sobre la situación financiera y los riesgos del Instituto Mexicano del Seguro Social 2023–2024</em>. Esta visualización reproduce los valores del Excel cargado; revisa la nota metodológica antes de publicar.</div>
+  <div class="method-note">La suma de los porcentajes para cada nivel puede no ser igual a 100% por cuestiones de redondeo.</div>
+  <div class="source">Fuente: Instituto Mexicano del Seguro Social. Datos organizados por nivel de atención y año en el archivo de trabajo.</div>
 </main>
 <script>
 const COLORS={bueno:"#21866b",malo:"#c94d4d",regular:"#e2a52b"};
 const ICONS={equipo:"⚙️",instalaciones:"🏥",inmueble:"🏢"};
 const CATEGORIES=["equipo","instalaciones","inmueble"];
-let records=[], donutCharts=[], stackedChart=null;
-const statusEl=document.getElementById("status"), noteEl=document.getElementById("dataNote");
+const LEVELS=["1er nivel","2o nivel","3er nivel"];
+let comparisons=[], recordsBySheet={}, selectedSheet="", selectedLevel=LEVELS[0], donutCharts=[], stackedChart=null;
+const statusEl=document.getElementById("status");
 function normalize(s){return String(s??"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
 function num(v){if(v===null||v===undefined||v==="")return null;const n=Number(String(v).replace("%","").replace(",","."));return Number.isFinite(n)?n:null}
-function parseWorkbook(workbook){
- const sheet=workbook.Sheets[workbook.SheetNames[0]];
+function parseSheet(sheet){
  const rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:null,raw:true});
- let level="", category="", out=[];
- for(const row of rows){
-   const cells=row||[];
+ let level="",category="",out=[];
+ for(const cells of rows){
    const a=normalize(cells[0]);
-   if(["1er nivel","2o nivel","2º nivel","3er nivel"].includes(a)){
-     level=String(cells[0]).trim().replace("º","o");
-     category="";
-   }
+   if(LEVELS.map(normalize).includes(a)){level=String(cells[0]).trim().replace("º","o");category="";}
+   const c=normalize(cells[2]);
+   if(CATEGORIES.includes(c))category=c;
    const year=num(cells[1]);
-   const categoryCell=normalize(cells[2]);
-   // La categoría aparece en la fila 2023; la fila 2022 deja esa celda vacía.
-   if(CATEGORIES.includes(categoryCell)) category=categoryCell;
-   if(level && [2022,2023].includes(year) && CATEGORIES.includes(category)){
+   if(level&&category&&Number.isInteger(year)&&[3,4,5].every(i=>num(cells[i])!==null)){
      out.push({level,year,category,bueno:num(cells[3]),malo:num(cells[4]),regular:num(cells[5])});
    }
  }
  return out;
 }
-function latest(level,cat){return records.find(r=>r.level===level&&r.category===cat&&r.year===2023)}
-function fmt(v){return v===null||v===undefined?"Sin dato":`${v.toLocaleString("es-MX",{maximumFractionDigits:1})}%`}
+function record(level,cat,year){return (recordsBySheet[selectedSheet]||[]).find(r=>r.level===level&&r.category===cat&&r.year===year)}
+function yearsForSheet(name){return [...new Set((recordsBySheet[name]||[]).map(r=>r.year))].sort((a,b)=>a-b)}
+function renderButtons(){
+ const levels=document.getElementById("levelButtons");levels.innerHTML="";
+ LEVELS.forEach(level=>{const b=document.createElement("button");b.className="choice"+(level===selectedLevel?" active":"");b.textContent=level;b.setAttribute("aria-pressed",String(level===selectedLevel));b.onclick=()=>{selectedLevel=level;renderAll()};levels.appendChild(b)});
+ const comps=document.getElementById("comparisonButtons");comps.innerHTML="";
+ comparisons.forEach(name=>{const b=document.createElement("button");b.className="choice"+(name===selectedSheet?" active":"");b.textContent=name;b.setAttribute("aria-pressed",String(name===selectedSheet));b.onclick=()=>{selectedSheet=name;renderAll()};comps.appendChild(b)});
+}
+function fmt(v){return v===null||v===undefined?"Sin dato":`${v.toLocaleString("es-MX",{maximumFractionDigits:2})}%`}
 function renderCards(){
  donutCharts.forEach(c=>c.destroy());donutCharts=[];
- const level=document.getElementById("levelSelect").value;
+ const years=yearsForSheet(selectedSheet), latestYear=years[years.length-1];
+ document.getElementById("donutHeading").textContent=`Estado de conservación · ${latestYear}`;
  const root=document.getElementById("categoryCards");root.innerHTML="";
  CATEGORIES.forEach(cat=>{
-   const r=latest(level,cat);
+   const r=record(selectedLevel,cat,latestYear);
    const card=document.createElement("article");card.className="card";
-   card.innerHTML=`<div class="card-top"><div class="big-icon" aria-hidden="true">${ICONS[cat]}</div><div><div class="eyebrow">Estado de conservación</div><h3>${cat[0].toUpperCase()+cat.slice(1)}</h3></div></div><div class="chart-wrap"><canvas aria-label="Proporción de estado para ${cat}"></canvas></div><div class="legend"><span><i class="dot" style="background:${COLORS.bueno}"></i>Bueno</span><span><i class="dot" style="background:${COLORS.malo}"></i>Malo</span><span><i class="dot" style="background:${COLORS.regular}"></i>Regular</span></div>`;
+   card.innerHTML=`<div class="card-top"><div class="big-icon" aria-hidden="true">${ICONS[cat]}</div><h3>${cat[0].toUpperCase()+cat.slice(1)}</h3></div><div class="chart-wrap"><canvas aria-label="Proporción de estado para ${cat}"></canvas></div><div class="legend"><span><i class="dot" style="background:${COLORS.bueno}"></i>Bueno</span><span><i class="dot" style="background:${COLORS.malo}"></i>Malo</span><span><i class="dot" style="background:${COLORS.regular}"></i>Regular</span></div>`;
    root.appendChild(card);
-   const canvas=card.querySelector("canvas");
    const values=r?[r.bueno,r.malo,r.regular]:[0,0,0];
-   donutCharts.push(new Chart(canvas,{type:"doughnut",data:{labels:["Bueno","Malo","Regular"],datasets:[{data:values,backgroundColor:[COLORS.bueno,COLORS.malo,COLORS.regular],borderColor:"#fff",borderWidth:3,hoverOffset:5}]},options:{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fmt(c.raw)}`}}}}}));
+   donutCharts.push(new Chart(card.querySelector("canvas"),{type:"doughnut",data:{labels:["Bueno","Malo","Regular"],datasets:[{data:values,backgroundColor:[COLORS.bueno,COLORS.malo,COLORS.regular],borderColor:"#fff",borderWidth:3,hoverOffset:5}]},options:{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fmt(c.raw)}`}}}}}));
  });
- document.getElementById("periodText").textContent=`Vista: ${level} · datos de 2023`;
 }
 function renderStacked(){
  if(stackedChart)stackedChart.destroy();
- const level=document.getElementById("levelSelect").value;
- const labels=[], values={bueno:[],malo:[],regular:[]};
- CATEGORIES.forEach(cat=>[2022,2023].forEach(year=>{
-   const r=records.find(x=>x.level===level&&x.category===cat&&x.year===year);
+ const years=yearsForSheet(selectedSheet), labels=[],values={bueno:[],malo:[],regular:[]};
+ CATEGORIES.forEach(cat=>years.forEach(year=>{
+   const r=record(selectedLevel,cat,year);
    labels.push(`${cat[0].toUpperCase()+cat.slice(1)} · ${year}`);
    values.bueno.push(r?.bueno??null);values.malo.push(r?.malo??null);values.regular.push(r?.regular??null);
  }));
@@ -131,34 +133,22 @@ function renderStacked(){
  {label:"Regular",data:values.regular,backgroundColor:COLORS.regular}
  ]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true,max:100,ticks:{callback:v=>v+"%"},title:{display:true,text:"Porcentaje"}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.raw)}`}}}}});
 }
-function validateAndRender(data){
- records=data;
- if(!records.length){statusEl.textContent="No se encontraron filas con el formato esperado. Revisa que el Excel conserve las columnas originales.";return}
- renderCards();renderStacked();
- const anomalies=[];
- records.forEach(r=>{
-   const vals=[r.bueno,r.malo,r.regular].filter(v=>v!==null);
-   if(vals.some(v=>v<0||v>100))anomalies.push(`${r.level}, ${r.category}, ${r.year}: hay un valor fuera de 0–100% (${vals.join(", ")}).`);
-   const total=vals.reduce((a,b)=>a+b,0);
-   if(vals.length===3&&Math.abs(total-100)>1.2)anomalies.push(`${r.level}, ${r.category}, ${r.year}: los porcentajes suman ${total.toFixed(1)}%.`);
- });
- noteEl.hidden=!anomalies.length;
- noteEl.textContent=anomalies.length?"Revisión de datos antes de publicar: "+anomalies.join(" "):"";
- statusEl.textContent=`Se cargaron ${records.length} registros desde Excel. ${anomalies.length?`Se detectaron ${anomalies.length} posibles inconsistencias.`:"No se detectaron sumas anómalas."}`;
-}
+function renderAll(){renderButtons();renderCards();renderStacked()}
 async function loadPublished(){
  try{
    const res=await fetch("./datos.xlsx?ts="+Date.now());
-   if(!res.ok)throw new Error("No se pudo encontrar datos.xlsx");
-   const buf=await res.arrayBuffer();validateAndRender(parseWorkbook(XLSX.read(buf,{type:"array"})));
- }catch(e){statusEl.textContent="No se pudo cargar datos.xlsx automáticamente. Puedes cargar el Excel con el botón. En GitHub Pages, comprueba que datos.xlsx esté junto a index.html."}
+   if(!res.ok)throw Error("No se encontró datos.xlsx en el repositorio.");
+   const workbook=XLSX.read(await res.arrayBuffer(),{type:"array"});
+   comparisons=workbook.SheetNames.filter(name=>parseSheet(workbook.Sheets[name]).length>0);
+   comparisons.forEach(name=>recordsBySheet[name]=parseSheet(workbook.Sheets[name]));
+   if(!comparisons.length)throw Error("No se encontraron hojas con datos reconocibles.");
+   selectedSheet=comparisons[comparisons.length-1];
+   const issues=comparisons.filter(name=>recordsBySheet[name].length!==18);
+   renderAll();
+   if(issues.length)statusEl.textContent="Atención: revisa la estructura de estas hojas: "+issues.join(", ")+".";
+ }catch(e){statusEl.textContent="No se pudieron cargar los datos: "+e.message}
 }
-document.getElementById("levelSelect").addEventListener("change",()=>{renderCards();renderStacked()});
-document.getElementById("excelFile").addEventListener("change",async e=>{
- const file=e.target.files[0];if(!file)return;
- try{const buf=await file.arrayBuffer();validateAndRender(parseWorkbook(XLSX.read(buf,{type:"array"})));statusEl.textContent+=" Vista previa local: para publicar los cambios, reemplaza datos.xlsx en el repositorio de GitHub."}
- catch(err){statusEl.textContent="No pude leer ese archivo Excel. Comprueba que sea un .xlsx válido."}
-});
 loadPublished();
 </script>
-</body></html>
+</body>
+</html>
