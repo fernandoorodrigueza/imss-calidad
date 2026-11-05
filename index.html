@@ -52,6 +52,25 @@ main{max-width:1180px;margin:0 auto;padding:30px 22px 58px}
 .status{margin:10px auto 0;text-align:center;color:#9b3e35;font-size:.88rem}
 @media(max-width:420px){.value-grid{gap:4px}.value-item{font-size:.7rem}.value-item strong{font-size:.9rem}}
 @media(max-width:800px){.cards{grid-template-columns:1fr}.chart-wrap{height:240px}.bar-wrap{height:420px}.choice{padding:10px 16px}.comparison-row .choice{min-width:unset}}
+
+.index-section{margin:34px 0 26px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:0 4px 16px #17313b08}
+.index-section h2{margin:0 0 6px;text-align:center;font-size:1.4rem}
+.index-intro{margin:0 auto 18px;max-width:850px;text-align:center;color:var(--muted);font-size:.92rem}
+.heatmap-scroll{overflow-x:auto}
+.heatmap{width:100%;border-collapse:separate;border-spacing:4px;min-width:760px;font-size:.82rem}
+.heatmap th{padding:8px 6px;color:var(--muted);font-weight:750;text-align:center;white-space:nowrap}
+.heatmap th:first-child{text-align:left;min-width:185px}
+.heatmap td{padding:0;text-align:center}
+.heatmap .row-label{padding:8px 10px;text-align:left;background:#f4f7f6;border-radius:7px;font-weight:700;white-space:nowrap;color:var(--ink)}
+.heat-cell{display:block;padding:11px 5px;border-radius:7px;font-weight:800;color:#18313a;min-width:70px}
+.heat-cell.warning{outline:2px solid #b77a20;outline-offset:-2px}
+.heat-legend{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin:14px 0 4px;color:var(--muted);font-size:.8rem}
+.heat-legend span{display:flex;align-items:center;gap:6px}
+.heat-swatch{width:12px;height:12px;border-radius:3px;display:inline-block}
+.index-method{margin:14px 0 0;padding:12px 14px;background:#f6f8f8;border-radius:8px;color:#52616a;font-size:.83rem}
+.index-warning{margin:12px 0 0;padding:12px 14px;border:1px solid #e5c994;background:#fff9ed;border-radius:8px;color:#704f1c;font-size:.84rem}
+@media(max-width:800px){.index-section{padding:15px}}
+
 </style>
 </head>
 <body>
@@ -70,6 +89,19 @@ main{max-width:1180px;margin:0 auto;padding:30px 22px 58px}
     <div class="button-row comparison-row" id="comparisonButtons" aria-label="Seleccionar comparativo"></div>
   </section>
   <div id="status" class="status" role="status"></div>
+  <section class="index-section" aria-labelledby="indexHeading">
+    <h2 id="indexHeading">Evolución del índice de conservación</h2>
+    <p class="index-intro">Cambio del índice entre los dos años de cada informe. Cada fila combina un nivel de atención y un tipo de elemento; cada columna corresponde a uno de los siete informes.</p>
+    <div class="heatmap-scroll" id="indexHeatmap" aria-live="polite"></div>
+    <div class="heat-legend">
+      <span><i class="heat-swatch" style="background:#f2c9c6"></i>Deterioro</span>
+      <span><i class="heat-swatch" style="background:#f1eddf"></i>Sin cambio importante</span>
+      <span><i class="heat-swatch" style="background:#c9e4d7"></i>Mejora</span>
+      <span><i class="heat-swatch" style="background:#fff1d5;border:1px solid #b77a20"></i>Dato por revisar</span>
+    </div>
+    <p class="index-method"><strong>Índice:</strong> (100 × % bueno + 50 × % regular) ÷ (% bueno + % malo + % regular). Escala de 0 a 100. La variación se expresa en puntos del índice, no en porcentajes.</p>
+    <p class="index-warning"><strong>Advertencia de calidad:</strong> la hoja 2021 presenta valores del año 2020 idénticos a los publicados como 2019 en la hoja 2020, en las nueve combinaciones. Además, hay valores atípicos en la comparación 2019-2020. Por ello, esa columna se marca para revisión y no debe interpretarse como evidencia concluyente de mejora o deterioro.</p>
+  </section>
   <h2 class="section-title" id="donutHeading">Estado de conservación</h2>
   <p class="section-desc">Distribución porcentual de las condiciones reportadas para cada categoría.</p>
   <section class="year-block">
@@ -121,6 +153,48 @@ function parseSheet(sheet){
 function record(level,cat,year){return (recordsBySheet[selectedSheet]||[]).find(r=>normalize(r.level)===normalize(level)&&r.category===cat&&r.year===year)}
 function yearsForSheet(name){return [...new Set((recordsBySheet[name]||[]).map(r=>r.year))].sort((a,b)=>a-b)}
 function fmt(v){return v===null||v===undefined?"Sin dato":`${v.toLocaleString("es-MX",{maximumFractionDigits:2})}%`}
+function conservationIndex(r){
+ if(!r)return null;
+ const total=r.bueno+r.malo+r.regular;
+ return total>0?(100*r.bueno+50*r.regular)/total:null;
+}
+function heatColor(delta){
+ const strength=Math.min(Math.abs(delta)/13,1);
+ if(delta>0.15){const a=0.12+strength*0.42;return `rgba(87,155,120,${a})`;}
+ if(delta< -0.15){const a=0.12+strength*0.42;return `rgba(198,91,87,${a})`;}
+ return "rgba(213,184,92,.22)";
+}
+function renderIndexHeatmap(){
+ const root=document.getElementById("indexHeatmap");
+ if(!root)return;
+ const cols=comparisons.map(name=>{
+   const years=yearsForSheet(name);
+   return {name,oldYear:years[0],newYear:years[years.length-1]};
+ }).filter(c=>Number.isFinite(c.oldYear)&&Number.isFinite(c.newYear));
+ let out='<table class="heatmap"><thead><tr><th scope="col">Nivel · categoría</th>';
+ cols.forEach(c=>{out+=`<th scope="col">${c.name}<br><small>${c.oldYear} → ${c.newYear}</small></th>`});
+ out+='</tr></thead><tbody>';
+ LEVELS.forEach(level=>CATEGORIES.forEach(cat=>{
+   const label=`${level} · ${cat[0].toUpperCase()+cat.slice(1)}`;
+   out+=`<tr><th scope="row" class="row-label">${label}</th>`;
+   cols.forEach(c=>{
+     const oldRec=recordFromSheet(c.name,level,cat,c.oldYear);
+     const newRec=recordFromSheet(c.name,level,cat,c.newYear);
+     const oldIndex=conservationIndex(oldRec),newIndex=conservationIndex(newRec);
+     if(oldIndex===null||newIndex===null){out+='<td><span class="heat-cell">Sin dato</span></td>';return;}
+     const delta=newIndex-oldIndex, warning=c.name==="2021";
+     const sign=delta>0?"+":"";
+     const title=`${c.name}: ${c.oldYear} ${oldIndex.toFixed(2)} puntos; ${c.newYear} ${newIndex.toFixed(2)} puntos; cambio ${sign}${delta.toFixed(2)}${warning?'. Revisar consistencia de esta hoja.':''}`;
+     out+=`<td><span class="heat-cell${warning?' warning':''}" style="background:${heatColor(delta)}" title="${title}">${sign}${delta.toFixed(1)}${warning?' †':''}</span></td>`;
+   });
+   out+='</tr>';
+ }));
+ out+='</tbody></table>';
+ root.innerHTML=out;
+}
+function recordFromSheet(sheetName,level,cat,year){
+ return (recordsBySheet[sheetName]||[]).find(r=>normalize(r.level)===normalize(level)&&r.category===cat&&r.year===year);
+}
 function renderButtons(){
  const levels=document.getElementById("levelButtons");levels.innerHTML="";
  LEVELS.forEach(level=>{const b=document.createElement("button");b.className="choice"+(level===selectedLevel?" active":"");b.textContent=level;b.setAttribute("aria-pressed",String(level===selectedLevel));b.onclick=()=>{selectedLevel=level;renderAll()};levels.appendChild(b)});
@@ -169,7 +243,7 @@ function renderCuriosities(){
  const name=c=>c[0].toUpperCase()+c.slice(1);
  panel.innerHTML=`<h3>Curiosidades · ${selectedLevel}</h3><p>Cambios entre ${oldYear} y ${newYear}, en puntos porcentuales:</p><ul><li>${name(best.cat)} tuvo el mayor aumento en estado bueno (${delta(best.bueno)}).</li><li>${name(worst.cat)} registró la mayor caída en estado bueno (${delta(worst.bueno)}).</li><li>${name(bad.cat)} presentó el mayor aumento en estado malo (${delta(bad.malo)}).</li></ul>`;
 }
-function renderAll(){renderButtons();renderCards();renderStacked();renderCuriosities()}
+function renderAll(){renderButtons();renderIndexHeatmap();renderCards();renderStacked();renderCuriosities()}
 async function loadPublished(){
  try{
    const res=await fetch("./datos.xlsx?ts="+Date.now());
