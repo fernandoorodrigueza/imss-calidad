@@ -63,12 +63,10 @@ main{max-width:1180px;margin:0 auto;padding:30px 22px 58px}
 .heatmap td{padding:0;text-align:center}
 .heatmap .row-label{padding:8px 10px;text-align:left;background:#f4f7f6;border-radius:7px;font-weight:700;white-space:nowrap;color:var(--ink)}
 .heat-cell{display:block;padding:11px 5px;border-radius:7px;font-weight:800;color:#18313a;min-width:70px}
-.heat-cell.warning{outline:2px solid #b77a20;outline-offset:-2px}
 .heat-legend{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin:14px 0 4px;color:var(--muted);font-size:.8rem}
 .heat-legend span{display:flex;align-items:center;gap:6px}
 .heat-swatch{width:12px;height:12px;border-radius:3px;display:inline-block}
 .index-method{margin:14px 0 0;padding:12px 14px;background:#f6f8f8;border-radius:8px;color:#52616a;font-size:.83rem}
-.index-warning{margin:12px 0 0;padding:12px 14px;border:1px solid #e5c994;background:#fff9ed;border-radius:8px;color:#704f1c;font-size:.84rem}
 @media(max-width:800px){.index-section{padding:15px}}
 
 </style>
@@ -97,10 +95,8 @@ main{max-width:1180px;margin:0 auto;padding:30px 22px 58px}
       <span><i class="heat-swatch" style="background:#f2c9c6"></i>Deterioro</span>
       <span><i class="heat-swatch" style="background:#f1eddf"></i>Sin cambio importante</span>
       <span><i class="heat-swatch" style="background:#c9e4d7"></i>Mejora</span>
-      <span><i class="heat-swatch" style="background:#fff1d5;border:1px solid #b77a20"></i>Dato por revisar</span>
     </div>
     <p class="index-method"><strong>Índice:</strong> (100 × % bueno + 50 × % regular) ÷ (% bueno + % malo + % regular). Escala de 0 a 100. La variación se expresa en puntos del índice, no en porcentajes.</p>
-    <p class="index-warning"><strong>Advertencia de calidad:</strong> la hoja 2021 presenta valores del año 2020 idénticos a los publicados como 2019 en la hoja 2020, en las nueve combinaciones. Además, hay valores atípicos en la comparación 2019-2020. Por ello, esa columna se marca para revisión y no debe interpretarse como evidencia concluyente de mejora o deterioro.</p>
   </section>
   <h2 class="section-title" id="donutHeading">Estado de conservación</h2>
   <p class="section-desc">Distribución porcentual de las condiciones reportadas para cada categoría.</p>
@@ -182,10 +178,10 @@ function renderIndexHeatmap(){
      const newRec=recordFromSheet(c.name,level,cat,c.newYear);
      const oldIndex=conservationIndex(oldRec),newIndex=conservationIndex(newRec);
      if(oldIndex===null||newIndex===null){out+='<td><span class="heat-cell">Sin dato</span></td>';return;}
-     const delta=newIndex-oldIndex, warning=c.name==="2021";
+     const delta=newIndex-oldIndex;
      const sign=delta>0?"+":"";
-     const title=`${c.name}: ${c.oldYear} ${oldIndex.toFixed(2)} puntos; ${c.newYear} ${newIndex.toFixed(2)} puntos; cambio ${sign}${delta.toFixed(2)}${warning?'. Revisar consistencia de esta hoja.':''}`;
-     out+=`<td><span class="heat-cell${warning?' warning':''}" style="background:${heatColor(delta)}" title="${title}">${sign}${delta.toFixed(1)}${warning?' †':''}</span></td>`;
+     const title=`${c.name}: ${c.oldYear} ${oldIndex.toFixed(2)} puntos; ${c.newYear} ${newIndex.toFixed(2)} puntos; cambio ${sign}${delta.toFixed(2)}`;
+     out+=`<td><span class="heat-cell" style="background:${heatColor(delta)}" title="${title}">${sign}${delta.toFixed(1)}</span></td>`;
    });
    out+='</tr>';
  }));
